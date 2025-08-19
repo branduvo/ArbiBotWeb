@@ -71,8 +71,44 @@
 
 ### Monitoring
 
-- Check deployment status in Vercel dashboard
+- Check deployment status in Vercel dashboard  
 - View function logs in Vercel Functions tab
+
+## Troubleshooting White Screen Issue
+
+If you see a white screen on Vercel but the app works locally:
+
+### Quick Fix Steps
+1. **Update vercel.json** - Fixed routing for static assets
+2. **Rebuild and redeploy** - Push the updated configuration
+3. **Check browser console** - Look for asset loading errors
+4. **Test API endpoints** - Verify `/api/` routes work
+
+### Updated Vercel Configuration
+The `vercel.json` now includes specific routing for:
+- Static assets (`/assets/*`)
+- CSS/JS files
+- API endpoints (`/api/*`) 
+- Client-side routing (fallback to `/index.html`)
+
+### Environment Variables
+Make sure these are set in Vercel:
+```
+NODE_ENV=production
+```
+
+### API Connectivity
+The serverless functions should handle:
+- `/api/bot/status`
+- `/api/opportunities`
+- `/api/trades`
+
+### Force Rebuild
+If issues persist:
+1. Go to Vercel dashboard
+2. Deployments tab
+3. Redeploy latest commit
+4. Check build logs for errors
 - Monitor WebSocket connections via browser dev tools
 
 ## Environment Variables

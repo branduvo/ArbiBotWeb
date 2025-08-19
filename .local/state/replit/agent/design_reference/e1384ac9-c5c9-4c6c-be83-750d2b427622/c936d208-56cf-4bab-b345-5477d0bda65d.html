@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArbitrageBot - Professional Trading Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'trading-dark': '#0a0e27',
+                        'trading-slate': '#1a1d29',
+                        'trading-bg': '#121218',
+                        'trading-panel': '#1e1e2e',
+                        'profit-green': '#00d4aa',
+                        'loss-red': '#f44336',
+                        'info-blue': '#2196f3',
+                        'warning-orange': '#ff9800',
+                        'text-secondary': '#b0b3c1',
+                        'text-muted': '#6c7293'
+                    },
+                    fontFamily: {
+                        'mono': ['JetBrains Mono', 'monospace'],
+                        'sans': ['Roboto', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-trading-dark text-white font-sans overflow-x-hidden">
+    <!-- @COMPONENT: MainApp [root application container] -->
+    <div class="flex h-screen">
+        <!-- @COMPONENT: Sidebar [navigation and quick stats] -->
+        <div class="w-64 bg-trading-slate border-r border-gray-700 flex flex-col">
+            <!-- Logo and Brand -->
+            <div class="p-6 border-b border-gray-700">
+                <div class="flex items-center space-x-3">
+                    <div class="w-10 h-10 bg-gradient-to-r from-info-blue to-profit-green rounded-lg flex items-center justify-center">
+                        <i class="fas fa-chart-line text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-xl font-bold" data-mock="true">ArbitrageBot</h1>
+                        <p class="text-text-muted text-sm" data-mock="true">Professional Trading</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation Menu -->
+            <nav class="flex-1 p-4">
+                <ul class="space-y-2">
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 p-3 rounded-lg bg-info-blue text-white">
+                            <i class="fas fa-tachometer-alt w-5"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 p-3 rounded-lg text-text-secondary hover:bg-trading-panel hover:text-white transition-colors">
+                            <i class="fas fa-exchange-alt w-5"></i>
+                            <span>Arbitrage Scanner</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 p-3 rounded-lg text-text-secondary hover:bg-trading-panel hover:text-white transition-colors">
+                            <i class="fas fa-robot w-5"></i>
+                            <span>Bot Control</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 p-3 rounded-lg text-text-secondary hover:bg-trading-panel hover:text-white transition-colors">
+                            <i class="fas fa-chart-bar w-5"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 p-3 rounded-lg text-text-secondary hover:bg-trading-panel hover:text-white transition-colors">
+                            <i class="fas fa-history w-5"></i>
+                            <span>Trading History</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="#" class="flex items-center space-x-3 p-3 rounded-lg text-text-secondary hover:bg-trading-panel hover:text-white transition-colors">
+                            <i class="fas fa-cog w-5"></i>
+                            <span>Settings</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- Quick Stats -->
+            <!-- @STATE: botStatus:string = "running" -->
+            <div class="p-4 border-t border-gray-700">
+                <div class="space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-text-muted">Bot Status</span>
+                        <div class="flex items-center space-x-2">
+                            <div class="w-2 h-2 bg-profit-green rounded-full animate-pulse" data-bind="botStatus.indicator"></div>
+                            <span class="text-sm text-profit-green font-medium" data-mock="true" data-bind="botStatus.text">Running</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-text-muted">24h Profit</span>
+                        <span class="text-sm font-mono text-profit-green" data-mock="true" data-bind="dailyProfit">+$2,847.32</span>
+                    </div>
+                    <div class="flex items-center justify-between">
+                        <span class="text-sm text-text-muted">Active Pairs</span>
+                        <span class="text-sm font-mono text-info-blue" data-mock="true" data-bind="activePairs">12</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: Sidebar -->
+
+        <!-- @COMPONENT: MainContent [primary dashboard area] -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Top Header -->
+            <!-- @COMPONENT: TopHeader [status bar and controls] -->
+            <div class="bg-trading-slate border-b border-gray-700 p-4">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-6">
+                        <h2 class="text-2xl font-bold">Trading Dashboard</h2>
+                        <div class="flex items-center space-x-4">
+                            <div class="flex items-center space-x-2">
+                                <div class="w-3 h-3 bg-profit-green rounded-full animate-pulse"></div>
+                                <span class="text-sm text-text-secondary">Live Market Data</span>
+                            </div>
+                            <div class="text-sm text-text-muted">
+                                Last Update: <span class="font-mono" data-mock="true" data-bind="lastUpdate">14:23:15 UTC</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <!-- @FUNCTIONALITY: Emergency stop button should halt all trading operations -->
+                        <button class="px-4 py-2 bg-loss-red hover:bg-red-600 rounded-lg text-white font-medium transition-colors" data-event="click:emergencyStop">
+                            <i class="fas fa-stop mr-2"></i>Emergency Stop
+                        </button>
+                        <div class="flex items-center space-x-2">
+                            <i class="fas fa-wallet text-info-blue"></i>
+                            <span class="font-mono text-lg" data-mock="true" data-bind="walletBalance">$45,892.47</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- @END_COMPONENT: TopHeader -->
+
+            <!-- Main Dashboard Content -->
+            <div class="flex-1 p-6 overflow-auto bg-trading-bg">
+                <!-- Key Metrics Row -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                    <!-- @MAP: metrics.map(metric => ( -->
+                    <div class="bg-trading-panel rounded-xl p-6 border border-gray-700">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-text-secondary text-sm font-medium">Total Profit (24h)</h3>
+                            <i class="fas fa-chart-line text-profit-green"></i>
+                        </div>
+                        <div class="flex items-baseline space-x-2">
+                            <span class="text-3xl font-bold font-mono text-profit-green" data-mock="true">$2,847.32</span>
+                            <span class="text-sm text-profit-green font-medium" data-mock="true">+12.4%</span>
+                        </div>
+                        <p class="text-text-muted text-sm mt-2" data-mock="true">↑ +$347 from yesterday</p>
+                    </div>
+
+                    <div class="bg-trading-panel rounded-xl p-6 border border-gray-700">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-text-secondary text-sm font-medium">Arbitrage Opportunities</h3>
+                            <i class="fas fa-search-dollar text-warning-orange"></i>
+                        </div>
+                        <div class="flex items-baseline space-x-2">
+                            <span class="text-3xl font-bold font-mono text-white" data-mock="true">18</span>
+                            <span class="text-sm text-profit-green font-medium" data-mock="true">Active</span>
+                        </div>
+                        <p class="text-text-muted text-sm mt-2" data-mock="true">↑ 3 new opportunities detected</p>
+                    </div>
+
+                    <div class="bg-trading-panel rounded-xl p-6 border border-gray-700">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-text-secondary text-sm font-medium">Success Rate</h3>
+                            <i class="fas fa-bullseye text-info-blue"></i>
+                        </div>
+                        <div class="flex items-baseline space-x-2">
+                            <span class="text-3xl font-bold font-mono text-white" data-mock="true">94.7%</span>
+                            <span class="text-sm text-profit-green font-medium" data-mock="true">+2.1%</span>
+                        </div>
+                        <p class="text-text-muted text-sm mt-2" data-mock="true">847/894 successful trades</p>
+                    </div>
+
+                    <div class="bg-trading-panel rounded-xl p-6 border border-gray-700">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-text-secondary text-sm font-medium">Volume (24h)</h3>
+                            <i class="fas fa-coins text-info-blue"></i>
+                        </div>
+                        <div class="flex items-baseline space-x-2">
+                            <span class="text-3xl font-bold font-mono text-white" data-mock="true">$127.4K</span>
+                            <span class="text-sm text-profit-green font-medium" data-mock="true">+8.3%</span>
+                        </div>
+                        <p class="text-text-muted text-sm mt-2" data-mock="true">Across 5 exchanges</p>
+                    </div>
+                    <!-- @END_MAP )) -->
+                </div>
+
+                <!-- Main Content Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                    <!-- Real-time Price Monitoring -->
+                    <!-- @COMPONENT: PriceMonitor [live exchange price comparison] -->
+                    <div class="lg:col-span-2 bg-trading-panel rounded-xl border border-gray-700">
+                        <div class="p-6 border-b border-gray-700">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-bold">Live Price Monitoring</h3>
+                                <div class="flex items-center space-x-3">
+                                    <select class="bg-trading-dark border border-gray-600 rounded-lg px-3 py-2 text-sm">
+                                        <option data-mock="true">ETH/USDT</option>
+                                        <option data-mock="true">BTC/USDT</option>
+                                        <option data-mock="true">LINK/USDT</option>
+                                    </select>
+                                    <button class="p-2 hover:bg-trading-dark rounded-lg">
+                                        <i class="fas fa-sync-alt text-text-secondary"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <!-- Exchange Price Comparison Table -->
+                            <div class="overflow-x-auto">
+                                <table class="w-full">
+                                    <thead>
+                                        <tr class="text-left text-text-secondary text-sm border-b border-gray-700">
+                                            <th class="pb-3">Exchange</th>
+                                            <th class="pb-3">Price</th>
+                                            <th class="pb-3">24h Change</th>
+                                            <th class="pb-3">Volume</th>
+                                            <th class="pb-3">Opportunity</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="space-y-2">
+                                        <!-- @MAP: exchanges.map(exchange => ( -->
+                                        <tr class="border-b border-gray-800 hover:bg-trading-dark/50">
+                                            <td class="py-4 flex items-center space-x-3">
+                                                <div class="w-8 h-8 bg-gradient-to-r from-orange-500 to-yellow-500 rounded-full flex items-center justify-center">
+                                                    <span class="text-xs font-bold" data-mock="true">B</span>
+                                                </div>
+                                                <span class="font-medium" data-mock="true" data-bind="exchange.name">Binance</span>
+                                            </td>
+                                            <td class="py-4 font-mono text-lg" data-mock="true" data-bind="exchange.price">$2,847.32</td>
+                                            <td class="py-4">
+                                                <span class="text-profit-green font-medium" data-mock="true" data-bind="exchange.change">+2.45%</span>
+                                            </td>
+                                            <td class="py-4 text-text-secondary font-mono" data-mock="true" data-bind="exchange.volume">$125.7M</td>
+                                            <td class="py-4">
+                                                <span class="px-2 py-1 bg-profit-green/20 text-profit-green rounded text-xs font-medium" data-mock="true">+0.12%</span>
+                                            </td>
+                                        </tr>
+                                        <tr class="border-b border-gray-800 hover:bg-trading-dark/50">
+                                            <td class="py-4 flex items-center space-x-3">
+                                                <div class="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                                                    <span class="text-xs font-bold" data-mock="true">C</span>
+                                                </div>
+                                                <span class="font-medium" data-mock="true">Coinbase Pro</span>
+                                            </td>
+                                            <td class="py-4 font-mono text-lg" data-mock="true">$2,844.91</td>
+                                            <td class="py-4">
+                                                <span class="text-profit-green font-medium" data-mock="true">+2.38%</span>
+                                            </td>
+                                            <td class="py-4 text-text-secondary font-mono" data-mock="true">$98.3M</td>
+                                            <td class="py-4">
+                                                <span class="px-2 py-1 bg-warning-orange/20 text-warning-orange rounded text-xs font-medium" data-mock="true">-0.04%</span>
+                                            </td>
+                                        </tr>
+                                        <tr class="border-b border-gray-800 hover:bg-trading-dark/50">
+                                            <td class="py-4 flex items-center space-x-3">
+                                                <div class="w-8 h-8 bg-gradient-to-r from-green-500 to-teal-500 rounded-full flex items-center justify-center">
+                                                    <span class="text-xs font-bold" data-mock="true">K</span>
+                                                </div>
+                                                <span class="font-medium" data-mock="true">Kraken</span>
+                                            </td>
+                                            <td class="py-4 font-mono text-lg" data-mock="true">$2,849.76</td>
+                                            <td class="py-4">
+                                                <span class="text-profit-green font-medium" data-mock="true">+2.52%</span>
+                                            </td>
+                                            <td class="py-4 text-text-secondary font-mono" data-mock="true">$67.2M</td>
+                                            <td class="py-4">
+                                                <span class="px-2 py-1 bg-profit-green/20 text-profit-green rounded text-xs font-medium" data-mock="true">+0.21%</span>
+                                            </td>
+                                        </tr>
+                                        <tr class="border-b border-gray-800 hover:bg-trading-dark/50">
+                                            <td class="py-4 flex items-center space-x-3">
+                                                <div class="w-8 h-8 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center">
+                                                    <span class="text-xs font-bold" data-mock="true">U</span>
+                                                </div>
+                                                <span class="font-medium" data-mock="true">Uniswap V3</span>
+                                            </td>
+                                            <td class="py-4 font-mono text-lg" data-mock="true">$2,843.15</td>
+                                            <td class="py-4">
+                                                <span class="text-profit-green font-medium" data-mock="true">+2.41%</span>
+                                            </td>
+                                            <td class="py-4 text-text-secondary font-mono" data-mock="true">$45.8M</td>
+                                            <td class="py-4">
+                                                <span class="px-2 py-1 bg-loss-red/20 text-loss-red rounded text-xs font-medium" data-mock="true">-0.09%</span>
+                                            </td>
+                                        </tr>
+                                        <!-- @END_MAP )) -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: PriceMonitor -->
+
+                    <!-- Bot Control Panel -->
+                    <!-- @COMPONENT: BotControl [trading bot management interface] -->
+                    <div class="bg-trading-panel rounded-xl border border-gray-700">
+                        <div class="p-6 border-b border-gray-700">
+                            <h3 class="text-lg font-bold">Bot Control Center</h3>
+                        </div>
+                        <div class="p-6 space-y-6">
+                            <!-- Bot Status -->
+                            <div class="text-center p-4 bg-trading-dark rounded-lg">
+                                <div class="w-16 h-16 bg-profit-green/20 rounded-full mx-auto mb-3 flex items-center justify-center">
+                                    <i class="fas fa-robot text-2xl text-profit-green"></i>
+                                </div>
+                                <h4 class="font-bold text-profit-green mb-2" data-mock="true" data-bind="bot.status">Bot Active</h4>
+                                <p class="text-sm text-text-muted" data-mock="true">Running for 2h 34m</p>
+                            </div>
+
+                            <!-- Trading Controls -->
+                            <div class="space-y-3">
+                                <button class="w-full py-3 bg-profit-green hover:bg-green-600 rounded-lg font-medium transition-colors" data-event="click:startBot" data-implementation="Should start automated trading with current parameters">
+                                    <i class="fas fa-play mr-2"></i>Start Trading
+                                </button>
+                                <button class="w-full py-3 bg-warning-orange hover:bg-orange-600 rounded-lg font-medium transition-colors" data-event="click:pauseBot">
+                                    <i class="fas fa-pause mr-2"></i>Pause Bot
+                                </button>
+                                <button class="w-full py-3 bg-loss-red hover:bg-red-600 rounded-lg font-medium transition-colors" data-event="click:stopBot">
+                                    <i class="fas fa-stop mr-2"></i>Stop Bot
+                                </button>
+                            </div>
+
+                            <!-- Current Settings -->
+                            <div class="bg-trading-dark rounded-lg p-4">
+                                <h5 class="font-medium mb-3">Current Settings</h5>
+                                <div class="space-y-2 text-sm">
+                                    <div class="flex justify-between">
+                                        <span class="text-text-muted">Min Profit %</span>
+                                        <span class="font-mono" data-mock="true" data-bind="settings.minProfit">0.25%</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-text-muted">Max Position</span>
+                                        <span class="font-mono" data-mock="true" data-bind="settings.maxPosition">$5,000</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-text-muted">Slippage</span>
+                                        <span class="font-mono" data-mock="true" data-bind="settings.slippage">0.5%</span>
+                                    </div>
+                                    <div class="flex justify-between">
+                                        <span class="text-text-muted">Gas Limit</span>
+                                        <span class="font-mono" data-mock="true" data-bind="settings.gasLimit">500K</span>
+                                    </div>
+                                </div>
+                                <button class="w-full mt-3 py-2 bg-info-blue hover:bg-blue-600 rounded text-sm font-medium transition-colors" data-event="click:openSettings">
+                                    <i class="fas fa-cog mr-2"></i>Adjust Settings
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: BotControl -->
+                </div>
+
+                <!-- Trading Opportunities and History -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <!-- Active Arbitrage Opportunities -->
+                    <!-- @COMPONENT: ArbitrageOpportunities [real-time opportunity detection] -->
+                    <div class="bg-trading-panel rounded-xl border border-gray-700">
+                        <div class="p-6 border-b border-gray-700">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-bold">Live Arbitrage Opportunities</h3>
+                                <div class="flex items-center space-x-2">
+                                    <div class="w-2 h-2 bg-profit-green rounded-full animate-pulse"></div>
+                                    <span class="text-sm text-text-muted" data-mock="true" data-bind="opportunities.count">18 Active</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="space-y-4 max-h-80 overflow-y-auto">
+                                <!-- @MAP: opportunities.map(opportunity => ( -->
+                                <div class="p-4 bg-trading-dark rounded-lg border border-gray-700 hover:border-profit-green/50 transition-colors">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="flex -space-x-2">
+                                                <div class="w-6 h-6 bg-orange-500 rounded-full border-2 border-trading-dark"></div>
+                                                <div class="w-6 h-6 bg-blue-500 rounded-full border-2 border-trading-dark"></div>
+                                            </div>
+                                            <div>
+                                                <p class="font-medium" data-mock="true">Binance → Coinbase</p>
+                                                <p class="text-xs text-text-muted" data-mock="true">ETH/USDT</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="font-mono text-profit-green font-bold" data-mock="true" data-bind="opportunity.profit">+0.34%</p>
+                                            <p class="text-xs text-text-muted" data-mock="true" data-bind="opportunity.potential">$127.45 profit</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between text-sm">
+                                        <div class="flex items-center space-x-4">
+                                            <span class="text-text-muted">Buy: <span class="font-mono text-white" data-mock="true">$2,844.91</span></span>
+                                            <span class="text-text-muted">Sell: <span class="font-mono text-white" data-mock="true">$2,854.66</span></span>
+                                        </div>
+                                        <button class="px-3 py-1 bg-profit-green hover:bg-green-600 rounded text-xs font-medium transition-colors" data-event="click:executeArbitrage" data-implementation="Should execute arbitrage trade with risk management">
+                                            Execute
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="p-4 bg-trading-dark rounded-lg border border-gray-700 hover:border-profit-green/50 transition-colors">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="flex -space-x-2">
+                                                <div class="w-6 h-6 bg-green-500 rounded-full border-2 border-trading-dark"></div>
+                                                <div class="w-6 h-6 bg-red-500 rounded-full border-2 border-trading-dark"></div>
+                                            </div>
+                                            <div>
+                                                <p class="font-medium" data-mock="true">Kraken → Uniswap</p>
+                                                <p class="text-xs text-text-muted" data-mock="true">LINK/USDT</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="font-mono text-profit-green font-bold" data-mock="true">+0.28%</p>
+                                            <p class="text-xs text-text-muted" data-mock="true">$89.32 profit</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between text-sm">
+                                        <div class="flex items-center space-x-4">
+                                            <span class="text-text-muted">Buy: <span class="font-mono text-white" data-mock="true">$14.67</span></span>
+                                            <span class="text-text-muted">Sell: <span class="font-mono text-white" data-mock="true">$14.71</span></span>
+                                        </div>
+                                        <button class="px-3 py-1 bg-profit-green hover:bg-green-600 rounded text-xs font-medium transition-colors">
+                                            Execute
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="p-4 bg-trading-dark rounded-lg border border-gray-700 hover:border-profit-green/50 transition-colors">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="flex -space-x-2">
+                                                <div class="w-6 h-6 bg-blue-500 rounded-full border-2 border-trading-dark"></div>
+                                                <div class="w-6 h-6 bg-orange-500 rounded-full border-2 border-trading-dark"></div>
+                                            </div>
+                                            <div>
+                                                <p class="font-medium" data-mock="true">Coinbase → Binance</p>
+                                                <p class="text-xs text-text-muted" data-mock="true">BTC/USDT</p>
+                                            </div>
+                                        </div>
+                                        <div class="text-right">
+                                            <p class="font-mono text-profit-green font-bold" data-mock="true">+0.19%</p>
+                                            <p class="text-xs text-text-muted" data-mock="true">$284.73 profit</p>
+                                        </div>
+                                    </div>
+                                    <div class="flex items-center justify-between text-sm">
+                                        <div class="flex items-center space-x-4">
+                                            <span class="text-text-muted">Buy: <span class="font-mono text-white" data-mock="true">$43,127.89</span></span>
+                                            <span class="text-text-muted">Sell: <span class="font-mono text-white" data-mock="true">$43,209.34</span></span>
+                                        </div>
+                                        <button class="px-3 py-1 bg-profit-green hover:bg-green-600 rounded text-xs font-medium transition-colors">
+                                            Execute
+                                        </button>
+                                    </div>
+                                </div>
+                                <!-- @END_MAP )) -->
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: ArbitrageOpportunities -->
+
+                    <!-- Recent Trading History -->
+                    <!-- @COMPONENT: TradingHistory [completed trade records] -->
+                    <div class="bg-trading-panel rounded-xl border border-gray-700">
+                        <div class="p-6 border-b border-gray-700">
+                            <div class="flex items-center justify-between">
+                                <h3 class="text-lg font-bold">Recent Trades</h3>
+                                <button class="text-sm text-info-blue hover:text-blue-400" data-event="click:viewAllTrades">
+                                    View All <i class="fas fa-arrow-right ml-1"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="p-6">
+                            <div class="space-y-4 max-h-80 overflow-y-auto">
+                                <!-- @MAP: recentTrades.map(trade => ( -->
+                                <div class="flex items-center justify-between p-3 bg-trading-dark rounded-lg">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-2 h-2 bg-profit-green rounded-full"></div>
+                                        <div>
+                                            <p class="font-medium" data-mock="true" data-bind="trade.pair">ETH/USDT</p>
+                                            <p class="text-xs text-text-muted" data-mock="true" data-bind="trade.route">Binance → Kraken</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-mono text-profit-green font-medium" data-mock="true" data-bind="trade.profit">+$127.45</p>
+                                        <p class="text-xs text-text-muted" data-mock="true" data-bind="trade.time">2m ago</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between p-3 bg-trading-dark rounded-lg">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-2 h-2 bg-profit-green rounded-full"></div>
+                                        <div>
+                                            <p class="font-medium" data-mock="true">LINK/USDT</p>
+                                            <p class="text-xs text-text-muted" data-mock="true">Uniswap → Coinbase</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-mono text-profit-green font-medium" data-mock="true">+$89.32</p>
+                                        <p class="text-xs text-text-muted" data-mock="true">5m ago</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between p-3 bg-trading-dark rounded-lg">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-2 h-2 bg-profit-green rounded-full"></div>
+                                        <div>
+                                            <p class="font-medium" data-mock="true">BTC/USDT</p>
+                                            <p class="text-xs text-text-muted" data-mock="true">Kraken → Binance</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-mono text-profit-green font-medium" data-mock="true">+$203.18</p>
+                                        <p class="text-xs text-text-muted" data-mock="true">8m ago</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between p-3 bg-trading-dark rounded-lg">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-2 h-2 bg-loss-red rounded-full"></div>
+                                        <div>
+                                            <p class="font-medium" data-mock="true">ADA/USDT</p>
+                                            <p class="text-xs text-text-muted" data-mock="true">Coinbase → Uniswap</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-mono text-loss-red font-medium" data-mock="true">-$12.45</p>
+                                        <p class="text-xs text-text-muted" data-mock="true">12m ago</p>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center justify-between p-3 bg-trading-dark rounded-lg">
+                                    <div class="flex items-center space-x-3">
+                                        <div class="w-2 h-2 bg-profit-green rounded-full"></div>
+                                        <div>
+                                            <p class="font-medium" data-mock="true">ETH/USDT</p>
+                                            <p class="text-xs text-text-muted" data-mock="true">Uniswap → Kraken</p>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <p class="font-mono text-profit-green font-medium" data-mock="true">+$156.89</p>
+                                        <p class="text-xs text-text-muted" data-mock="true">15m ago</p>
+                                    </div>
+                                </div>
+                                <!-- @END_MAP )) -->
+                            </div>
+                        </div>
+                    </div>
+                    <!-- @END_COMPONENT: TradingHistory -->
+                </div>
+            </div>
+        </div>
+        <!-- @END_COMPONENT: MainContent -->
+    </div>
+    <!-- @END_COMPONENT: MainApp -->
+
+    <!-- Settings Modal (Hidden by default) -->
+    <!-- @COMPONENT: SettingsModal [configuration interface] -->
+    <div id="settingsModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden z-50 flex items-center justify-center">
+        <div class="bg-trading-panel rounded-xl border border-gray-700 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="p-6 border-b border-gray-700">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-bold">Bot Configuration</h3>
+                    <button class="text-text-muted hover:text-white" data-event="click:closeSettings">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-6 space-y-6">
+                <!-- Trading Parameters -->
+                <div>
+                    <h4 class="text-lg font-medium mb-4">Trading Parameters</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm text-text-muted mb-2">Minimum Profit Margin (%)</label>
+                            <input type="number" class="w-full bg-trading-dark border border-gray-600 rounded-lg px-3 py-2 focus:border-info-blue focus:outline-none" value="0.25" step="0.01" data-mock="true">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-text-muted mb-2">Maximum Position Size ($)</label>
+                            <input type="number" class="w-full bg-trading-dark border border-gray-600 rounded-lg px-3 py-2 focus:border-info-blue focus:outline-none" value="5000" data-mock="true">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-text-muted mb-2">Slippage Tolerance (%)</label>
+                            <input type="number" class="w-full bg-trading-dark border border-gray-600 rounded-lg px-3 py-2 focus:border-info-blue focus:outline-none" value="0.5" step="0.1" data-mock="true">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-text-muted mb-2">Gas Limit</label>
+                            <input type="number" class="w-full bg-trading-dark border border-gray-600 rounded-lg px-3 py-2 focus:border-info-blue focus:outline-none" value="500000" data-mock="true">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Exchange Selection -->
+                <div>
+                    <h4 class="text-lg font-medium mb-4">Active Exchanges</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <label class="flex items-center space-x-3 p-3 bg-trading-dark rounded-lg cursor-pointer hover:bg-gray-700">
+                            <input type="checkbox" checked class="text-info-blue">
+                            <span>Binance</span>
+                        </label>
+                        <label class="flex items-center space-x-3 p-3 bg-trading-dark rounded-lg cursor-pointer hover:bg-gray-700">
+                            <input type="checkbox" checked class="text-info-blue">
+                            <span>Coinbase Pro</span>
+                        </label>
+                        <label class="flex items-center space-x-3 p-3 bg-trading-dark rounded-lg cursor-pointer hover:bg-gray-700">
+                            <input type="checkbox" checked class="text-info-blue">
+                            <span>Kraken</span>
+                        </label>
+                        <label class="flex items-center space-x-3 p-3 bg-trading-dark rounded-lg cursor-pointer hover:bg-gray-700">
+                            <input type="checkbox" checked class="text-info-blue">
+                            <span>Uniswap V3</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Risk Management -->
+                <div>
+                    <h4 class="text-lg font-medium mb-4">Risk Management</h4>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm text-text-muted mb-2">Stop Loss (%)</label>
+                            <input type="number" class="w-full bg-trading-dark border border-gray-600 rounded-lg px-3 py-2 focus:border-info-blue focus:outline-none" value="2.0" step="0.1" data-mock="true">
+                        </div>
+                        <div>
+                            <label class="block text-sm text-text-muted mb-2">Daily Loss Limit ($)</label>
+                            <input type="number" class="w-full bg-trading-dark border border-gray-600 rounded-lg px-3 py-2 focus:border-info-blue focus:outline-none" value="1000" data-mock="true">
+                        </div>
+                        <label class="flex items-center space-x-3">
+                            <input type="checkbox" checked class="text-info-blue">
+                            <span class="text-sm">Auto-pause on consecutive losses</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="p-6 border-t border-gray-700 flex items-center justify-end space-x-3">
+                <button class="px-4 py-2 text-text-muted hover:text-white border border-gray-600 rounded-lg hover:border-gray-500 transition-colors" data-event="click:closeSettings">
+                    Cancel
+                </button>
+                <button class="px-6 py-2 bg-info-blue hover:bg-blue-600 rounded-lg font-medium transition-colors" data-event="click:saveSettings" data-implementation="Should validate and save configuration settings">
+                    Save Settings
+                </button>
+            </div>
+        </div>
+    </div>
+    <!-- @END_COMPONENT: SettingsModal -->
+
+    <script>
+        // TODO: Implement business logic, API calls, or state management
+        
+        (function() {
+            // Simulate real-time price updates
+            function updatePrices() {
+                const priceElements = document.querySelectorAll('[data-bind*="price"]');
+                priceElements.forEach(element => {
+                    if (element.textContent.includes('$')) {
+                        const currentPrice = parseFloat(element.textContent.replace(/[$,]/g, ''));
+                        const change = (Math.random() - 0.5) * 0.02; // ±1% change
+                        const newPrice = currentPrice * (1 + change);
+                        element.textContent = `$${newPrice.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+                    }
+                });
+            }
+
+            // Update prices every 2 seconds
+            setInterval(updatePrices, 2000);
+
+            // Modal controls
+            const settingsModal = document.getElementById('settingsModal');
+            
+            document.addEventListener('click', function(e) {
+                if (e.target.matches('[data-event*="openSettings"]')) {
+                    settingsModal.classList.remove('hidden');
+                }
+                
+                if (e.target.matches('[data-event*="closeSettings"]') || 
+                    (e.target === settingsModal && !settingsModal.querySelector('.bg-trading-panel').contains(e.target))) {
+                    settingsModal.classList.add('hidden');
+                }
+            });
+
+            // Simulate bot status updates
+            function updateBotStatus() {
+                const statusElement = document.querySelector('[data-bind="botStatus.text"]');
+                const indicatorElement = document.querySelector('[data-bind="botStatus.indicator"]');
+                
+                const statuses = [
+                    { text: 'Running', color: 'profit-green', class: 'bg-profit-green' },
+                    { text: 'Scanning', color: 'warning-orange', class: 'bg-warning-orange' },
+                    { text: 'Executing', color: 'info-blue', class: 'bg-info-blue' }
+                ];
+                
+                const randomStatus = statuses[Math.floor(Math.random() * statuses.length)];
+                if (statusElement) statusElement.textContent = randomStatus.text;
+                if (indicatorElement) {
+                    indicatorElement.className = `w-2 h-2 ${randomStatus.class} rounded-full animate-pulse`;
+                }
+            }
+
+            // Update bot status every 5 seconds
+            setInterval(updateBotStatus, 5000);
+
+            // Update timestamps
+            function updateTimestamps() {
+                const now = new Date();
+                const timeString = now.toTimeString().split(' ')[0];
+                const lastUpdateElement = document.querySelector('[data-bind="lastUpdate"]');
+                if (lastUpdateElement) {
+                    lastUpdateElement.textContent = `${timeString} UTC`;
+                }
+            }
+
+            setInterval(updateTimestamps, 1000);
+        })();
+    </script>
+</body>
+</html>
